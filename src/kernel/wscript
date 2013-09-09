@@ -1,0 +1,15 @@
+def build(ctx):
+    ctx(rule='${NASM} -f elf32 -o  ${TGT} ${SRC}',
+        source='entry.asm', target='entry.o')
+
+    ctx(rule='${RUSTC} -O --target i386-intel-linux --lib -o ${TGT} -c ${SRC}',
+        source='main.rs', target='main.o')
+    ctx.add_manual_dependency(
+        ctx.path.find_node('main.rs'),
+        ctx.path.find_node('zero.rs'))
+
+    ctx(rule='${CC} -fno-pic -static -fno-builtin -fno-strict-aliasing -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -O -nostdinc -I. -o ${TGT} -c ${SRC}',
+        source='entrypgdir.c', target='entrypgdir.o')
+
+    ctx(rule='${LD} -m elf_i386 -o ${TGT} -T ${SRC}',
+        source='kernel.ld entry.o entrypgdir.o main.o', target='kernel')

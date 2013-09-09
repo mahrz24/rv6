@@ -1,0 +1,5 @@
+def build(ctx):
+  ctx.recurse("boot")
+  ctx.recurse("kernel")
+  ctx(rule=ctx.path.abspath()+ '/mkkernelimg.py ${SRC} ${TGT}',
+      source='boot/bootblock kernel/kernel', target='rv6.img')

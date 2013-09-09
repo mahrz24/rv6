@@ -1,0 +1,15 @@
+def build(ctx):
+    ctx(rule='${NASM} -f elf32 -o  ${TGT} ${SRC}',
+        source='boot.asm', target='boot.o')
+
+    ctx(rule='${CC} -fno-pic -static -fno-builtin -fno-strict-aliasing -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -O -nostdinc -I. -o ${TGT} -c ${SRC}',
+        source='bootmain.c', target='bootmain.o')
+
+    ctx(rule='${LD} -N -m elf_i386 -o ${TGT} -T ${SRC}',
+        source='boot.ld boot.o bootmain.o', target='bootblock.o')
+
+    ctx(rule='${OBJCOPY} -S -O binary -j .text ${SRC} ${TGT}',
+        source='bootblock.o', target='bootblock.bin')
+
+    ctx(rule=ctx.path.abspath()+ '/mkbootable.py ${SRC} ${TGT}',
+        source='bootblock.bin', target='bootblock')
