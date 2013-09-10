@@ -15,5 +15,5 @@ def build(ctx):
         features='cobject',
         source='entrypgdir.c', target='entrypgdir.o')
 
-    ctx(rule='${LD} -o ${TGT} -T ${SRC}',
+    ctx(rule='${LD} -m elf_i386 -o ${TGT} -T ${SRC}',
         source='kernel.ld entry.o entrypgdir.o main.o', target='kernel')
