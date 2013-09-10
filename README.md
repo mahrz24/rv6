@@ -6,4 +6,4 @@ rv6 is a kernel & operating system written (so far it is not much more than rust
 Disclaimer
 ----------
 
-This is just a hobby project and I started it to learn waf, rust and os development at the same time. Not sure if that is the best approach as things might turn out very ugly... ;)
+This is just a hobby project which I started to learn waf, rust and os development at the same time. Not sure if that is the best approach (for os development and learning these three topics) as things might turn out very ugly... ;)
