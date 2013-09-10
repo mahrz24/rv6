@@ -1,8 +1,10 @@
 def build(ctx):
-    ctx(rule='${NASM} -I./src/boot/ ${NASM_FLAGS} -o  ${TGT} ${SRC}',
-        source='boot.asm', target='boot.o')
+    ctx(rule='${NASM} -I./src/boot/ ${NASMFLAGS} -o  ${TGT} ${SRC}',
+        source='boot.asm',
+        target='boot.o',
+        features='nasm')
 
-    ctx(rule='${CC} -fno-pic -static -fno-builtin -fno-strict-aliasing -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -O -nostdinc -I. -o ${TGT} -c ${SRC}',
+    ctx(rule='${CC} ${CFLAGS} -o ${TGT} -c ${SRC}',
         source='bootmain.c', target='bootmain.o')
 
     ctx(rule='${LD} -N -m elf_i386 -o ${TGT} -T ${SRC}',

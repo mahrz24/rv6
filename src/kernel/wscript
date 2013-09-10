@@ -1,15 +1,15 @@
 def build(ctx):
-    ctx(rule='${NASM} ${NASM_FLAGS} -o  ${TGT} ${SRC}',
+    ctx(rule='${NASM} ${NASMFLAGS} -o  ${TGT} ${SRC}',
         source='entry.asm', target='entry.o')
 
-    ctx(rule='${RUSTC} ${RUST_FLAGS} -o ${TGT}  ${SRC}',
+    ctx(rule='${RUSTC} ${RUSTFLAGS} -o ${TGT}  ${SRC}',
         source='main.rs', target='main.o')
     ctx.add_manual_dependency(
         ctx.path.find_node('main.rs'),
         ctx.path.find_node('zero.rs'))
 
-    ctx(rule='${CC} -fno-pic -static -fno-builtin -fno-strict-aliasing -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -O -nostdinc -I. -o ${TGT} -c ${SRC}',
+    ctx(rule='${CC} ${CFLAGS} -o ${TGT} -c ${SRC}',
         source='entrypgdir.c', target='entrypgdir.o')
 
-    ctx(rule='${LD} -m elf_i386 -o ${TGT} -T ${SRC}',
+    ctx(rule='${LD} -o ${TGT} -T ${SRC}',
         source='kernel.ld entry.o entrypgdir.o main.o', target='kernel')
