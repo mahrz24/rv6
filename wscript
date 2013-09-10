@@ -6,6 +6,7 @@ VERSION = '0.0.1'
 from waflib import Task, TaskGen
 import re
 
+# Simple non recursive include scanner for nasm and c
 def nasm_scan(task):
     deps = []
     node = task.inputs[0]
@@ -18,7 +19,23 @@ def nasm_scan(task):
             if match:
                 dep = node.parent.find_resource(match.group(1))
                 if not dep:
-                    raise "Bla"
+                    raise "Could not find dependency resource"
+                deps.append(dep)
+    return (deps, [])
+
+def c_scan(task):
+    deps = []
+    node = task.inputs[0]
+
+    include = re.compile('\A#include\s+["<]([a-zA-Z0-9_.]+)[">]')
+
+    with open(node.abspath(), "r") as f:
+        for line in f:
+            match = include.match(line)
+            if match:
+                dep = node.parent.find_resource(match.group(1))
+                if not dep:
+                    raise "Could not find dependency resource"
                 deps.append(dep)
     return (deps, [])
 
@@ -26,6 +43,11 @@ def nasm_scan(task):
 @TaskGen.feature('nasm')
 def nasm_f(self):
     setattr(self, 'scan', nasm_scan)
+
+@TaskGen.taskgen_method
+@TaskGen.feature('cobject')
+def c_f(self):
+    setattr(self, 'scan', c_scan)
 
 
 # Allow to run scripts from the same folder via rule
@@ -38,14 +60,13 @@ def local_f(self):
 
 # The build script
 
-def options(opt):
-    opt.load('compiler_c')
 
 def configure(ctx):
-    ctx.load('compiler_c')
+
 
     # Find other programs needed for the build process
     ctx.find_program('nasm', var='NASM')
+    ctx.find_program('gcc', var='CC')
     ctx.find_program('ld', var='LD')
     ctx.find_program('rustc', var='RUSTC')
     ctx.find_program('qemu-system-i386', var='QEMU')
@@ -54,7 +75,10 @@ def configure(ctx):
 
     ctx.env.NASMFLAGS = '-f elf32'
     ctx.env.RUSTFLAGS = '-O --target i386-intel-linux --lib -c'
-    ctx.env.CFLAGS = '-fno-pic -static -fno-builtin -fno-strict-aliasing -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -O -nostdinc -I.'
+    ctx.env.CFLAGS = ['-fno-pic', '-static', '-fno-builtin',
+                      '-fno-strict-aliasing', '-Wall', '-MD', '-ggdb',
+                      '-m32', '-Werror', '-fno-omit-frame-pointer',
+                      '-fno-stack-protector', '-O', '-nostdinc']
 
 
 

@@ -1,5 +1,8 @@
+from waflib.Tools import c_preproc
+
 def build(ctx):
     ctx(rule='${NASM} ${NASMFLAGS} -o  ${TGT} ${SRC}',
+        features='nasm',
         source='entry.asm', target='entry.o')
 
     ctx(rule='${RUSTC} ${RUSTFLAGS} -o ${TGT}  ${SRC}',
@@ -8,7 +11,8 @@ def build(ctx):
         ctx.path.find_node('main.rs'),
         ctx.path.find_node('zero.rs'))
 
-    ctx(rule='${CC} ${CFLAGS} -o ${TGT} -c ${SRC}',
+    ctx(rule='${CC} ${CFLAGS} -I' + ctx.path.relpath() +'/ -o ${TGT} -c ${SRC}',
+        features='cobject',
         source='entrypgdir.c', target='entrypgdir.o')
 
     ctx(rule='${LD} -o ${TGT} -T ${SRC}',
