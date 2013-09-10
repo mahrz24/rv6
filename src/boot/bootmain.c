@@ -36,6 +36,7 @@ typedef unsigned char  uchar;
 typedef uint pde_t;
 
 #define ELF_MAGIC 0x464C457FU  // "\x7FELF" in little endian
+#define SECTSIZE  512
 
 // File header
 struct elfhdr {
@@ -109,13 +110,6 @@ stosb(void *addr, int data, int cnt)
                "0" (addr), "1" (cnt), "a" (data) :
                "memory", "cc");
 }
-
-
-
-//#include "x86.h"
-//#include "memlayout.h"
-
-#define SECTSIZE  512
 
 void readseg(uchar*, uint, uint);
 

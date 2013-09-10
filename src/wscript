@@ -1,5 +1,11 @@
 def build(ctx):
-  ctx.recurse("boot")
-  ctx.recurse("kernel")
-  ctx(rule=ctx.path.abspath()+ '/mkkernelimg.py ${SRC} ${TGT}',
-      source='boot/bootblock kernel/kernel', target='rv6.img')
+    ctx(rule='mkconstants.py ${SRC} ${TGT}',
+        features='local',
+        source='constants/memory.consts', target='boot/memory_c.asm')
+
+    ctx.recurse("boot")
+    ctx.recurse("kernel")
+
+    ctx(rule='mkkernelimg.py ${SRC} ${TGT}',
+        features='local',
+        source='boot/bootblock kernel/kernel', target='rv6.img')

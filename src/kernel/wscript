@@ -1,8 +1,8 @@
 def build(ctx):
-    ctx(rule='${NASM} -f elf32 -o  ${TGT} ${SRC}',
+    ctx(rule='${NASM} ${NASM_FLAGS} -o  ${TGT} ${SRC}',
         source='entry.asm', target='entry.o')
 
-    ctx(rule='${RUSTC} -O --target i386-intel-linux --lib -o ${TGT} -c ${SRC}',
+    ctx(rule='${RUSTC} ${RUST_FLAGS} -o ${TGT}  ${SRC}',
         source='main.rs', target='main.o')
     ctx.add_manual_dependency(
         ctx.path.find_node('main.rs'),

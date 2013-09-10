@@ -2,6 +2,7 @@
 xv6/
 build/
 .*waf*
+*_consts.*
 # Object files
 *.o
 

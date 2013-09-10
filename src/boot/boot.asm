@@ -1,5 +1,7 @@
 ; Segments
 
+%include "memory_c.asm"
+
 %define SEG_NULLASM dq 0
 
 %macro SEG_ASM 3 ; Type, Base, Lim
@@ -11,27 +13,10 @@
         db (((%2) >> 24) & 0xff)
 %endmacro
 
-%define STA_X     0x8  ; Executable segment
-%define STA_E     0x4  ; Expand down (non-executable segments)
-%define STA_C     0x4  ; Conforming code segment (executable only)
-%define STA_W     0x2  ; Writeable (non-executable segments)
-%define STA_R     0x2  ; Readable (executable segments)
-%define STA_A     0x1  ; Accessed
-
-; Control Register Flags
-
-%define CR0_PE    0x00000001 ; Protection enable
-
-%define SEG_KCODE 1  ; kernel Code
-%define SEG_KDATA 2  ; kernel Data+Stack
-
 use16 ; 16-bit mode
 
-
 global start
-
 extern bootmain
-
 
 start:
   ; Disable interrupts
