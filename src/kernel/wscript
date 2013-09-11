@@ -6,10 +6,8 @@ def build(ctx):
         source='entry.asm', target='entry.o')
 
     ctx(rule='${RUSTC} ${RUSTFLAGS} -o ${TGT}  ${SRC}',
+        features='bla',
         source='main.rs', target='main.o')
-    ctx.add_manual_dependency(
-        ctx.path.find_node('main.rs'),
-        ctx.path.find_node('zero.rs'))
 
     ctx(rule='${CC} ${CFLAGS} -I' + ctx.path.relpath() +'/ -o ${TGT} -c ${SRC}',
         features='cobject',

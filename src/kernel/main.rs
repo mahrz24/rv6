@@ -6,9 +6,8 @@
 
 use vgaterm::*;
 
-mod vgaterm;
 mod zero;
-
+mod vgaterm;
 
 struct Global {
   terminal: VGATerminal
@@ -19,6 +18,11 @@ impl Global {
     Global { terminal: VGATerminal::new() }
   }
 }
+
+extern {
+    static end: *u8;
+}
+
 
 #[no_mangle]
 pub unsafe fn main() {

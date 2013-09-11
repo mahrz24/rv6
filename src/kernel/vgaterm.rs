@@ -19,6 +19,7 @@ pub enum VGAColor {
     White       = 15,
 }
 
+
 struct VGATextColor(u8);
 struct VGAEntry(u16);
 
