@@ -1,3 +1,4 @@
+#[path="../kutil.rs"]
 mod kutil;
 
 pub enum VGAColor {
@@ -73,6 +74,43 @@ impl VGATerminal {
       {
         self.row = 0;
       }
+    }
+  }
+
+  pub unsafe fn write_num(&mut self, num: int, base: int, s: bool)
+  {
+    let mut sign = s;
+    let digits = "0123456789abcdef";
+    let mut buf:[u8, ..16] = [0 as u8, ..16];
+    let mut i: int;
+    let mut x: uint;
+
+    if sign && (num < 0) {
+      sign = true;
+      x = -num as uint;
+    }
+    else {
+      x = num as uint;
+    }
+
+    i = 0;
+    loop {
+      buf[i] = digits[x % (base as uint)];
+      i+=1;
+      x /= base as uint;
+      if x == 0 {
+        break;
+      }
+    }
+
+    if sign {
+      buf[i] = '-' as u8;
+      i+=1;
+    }
+
+    while(i >= 0) {
+      self.put_char(buf[i]);
+      i-=1;
     }
   }
 

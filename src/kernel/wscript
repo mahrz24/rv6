@@ -9,9 +9,14 @@ def build(ctx):
         features='bla',
         source='main.rs', target='main.o')
 
+
     ctx(rule='${CC} ${CFLAGS} -I' + ctx.path.relpath() +'/ -o ${TGT} -c ${SRC}',
         features='cobject',
         source='entrypgdir.c', target='entrypgdir.o')
 
+    ctx(rule='${CC} ${CFLAGS} -I' + ctx.path.relpath() +'/ -o ${TGT} -c ${SRC}',
+        features='cobject',
+        source='x86.c', target='x86.o')
+
     ctx(rule='${LD} -m elf_i386 -o ${TGT} -T ${SRC}',
-        source='kernel.ld entry.o entrypgdir.o main.o', target='kernel')
+        source='kernel.ld entry.o entrypgdir.o main.o x86.o', target='kernel')

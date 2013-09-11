@@ -5,6 +5,7 @@ VERSION = '0.0.1'
 
 from waflib import Task, TaskGen
 import re
+import os
 
 # Simple non recursive include scanner for nasm and c
 def nasm_scan(task):
@@ -49,14 +50,20 @@ def rs_scan(task):
 
 
 def rs_rec_scan(node, deps):
-    include = re.compile('\Amod\s+([a-zA-Z0-9_]+)')
+    include = re.compile('\A\s+(pub\s+)?mod\s+([a-zA-Z0-9_]+)')
     with open(node.abspath(), "r") as f:
         for line in f:
             match = include.match(line)
             if match:
-                dep = node.parent.find_resource(match.group(1) + '.rs')
+                filename = match.group(1) + '.rs'
+                dep = node.parent.find_resource(filename)
                 if not dep:
-                    raise "Could not find dependency resource"
+                    if node.parent:
+                        for dirname, dirnames, filenames in os.walk(node.parent.abspath()):
+                            for subdirname in dirnames:
+                                dep = node.parent.find_resource(subdirname + "/" + filename)
+                                if dep:
+                                    break
                 rec_deps = rs_rec_scan(dep, deps)
                 deps.append(dep)
     return deps

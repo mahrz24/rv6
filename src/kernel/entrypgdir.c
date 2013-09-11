@@ -26,6 +26,11 @@
 
 typedef unsigned int pde_t;
 pde_t entrypgdir[];  // For entry.asm
+extern char end[];
+
+void * get_end() {
+  return (void*)end;
+}
 
 // Boot page table used in entry.S and entryother.S.
 // Page directories (and page tables), must start on a page boundary,
