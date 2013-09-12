@@ -3,6 +3,8 @@ xv6/
 build/
 .*waf*
 *_consts.*
+.doit*
+__pycache__
 # Object files
 *.o
 

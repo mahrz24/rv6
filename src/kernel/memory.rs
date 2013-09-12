@@ -1,6 +1,6 @@
 pub use memory::memory_c::*;
 
-#[path="../../build/src/kernel/memory_c.rs"]
+#[path="memory/memory_c.rs"]
 pub mod memory_c;
 
 #[path="memory/kalloc.rs"]
