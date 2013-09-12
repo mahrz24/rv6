@@ -109,8 +109,8 @@ impl VGATerminal {
     }
 
     while(i >= 0) {
+      i -= 1;
       self.put_char(buf[i]);
-      i-=1;
     }
   }
 
