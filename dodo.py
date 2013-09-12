@@ -46,7 +46,7 @@ def task_compile_main():
         'clean': True}
 
 def task_compile_c():
-    for f in ['entrypgdir', 'x86']:
+    for f in ['cbase', 'x86']:
         yield {'name':  f,
                'actions': ['%s %s -Isrc/kernel/ ' % (CC, CFLAGS) +
                         ' -o src/kernel/%s.o ' % f +
@@ -61,12 +61,12 @@ def task_link_kernel():
     return {'actions': ['%s -N -m elf_i386 -o src/kernel/kernel ' % LD +
                         ' -T src/kernel/kernel.ld '
                         'src/kernel/entry.o '
-                        'src/kernel/entrypgdir.o '
+                        'src/kernel/cbase.o '
                         'src/kernel/main.o '
                         'src/kernel/x86.o'],
         'file_dep': ['src/boot/boot.ld',
                      'src/kernel/entry.o',
-                     'src/kernel/entrypgdir.o',
+                     'src/kernel/cbase.o',
                      'src/kernel/main.o',
                      'src/kernel/x86.o'],
         'targets': ['src/kernel/kernel'],

@@ -7,38 +7,32 @@
 use console::vgaterm::*;
 
 mod zero;
-mod console;
-mod memory;
-
-struct Global {
-  terminal: VGATerminal
-}
-
-impl Global {
-  fn new() -> Global {
-    Global { terminal: VGATerminal::new() }
-  }
-}
-
+pub mod panic;
+pub mod console;
+pub mod macros;
+pub mod memory;
+pub mod x86;
+pub mod kutil;
 
 #[no_mangle]
 pub unsafe fn main() {
-  let mut g = Global::new();
-  g.terminal.color = make_color(Yellow, Blue);
-  g.terminal.clear();
+  terminal = VGATerminal::new();
 
-  g.terminal.write_string("================================================================================\x00");
-  g.terminal.write_string("rv6 v.0.1 kernel is starting\n\x00");
+  terminal.color = make_color(Yellow, Blue);
+  terminal.clear();
+
+  terminal.print_string("================================================================================\x00");
+  terminal.print_string("rv6 v.0.1 kernel is starting\n\x00");
 
   let vstart: *() = memory::get_end();
   let vend: *() = memory::P2V(4*1024*1024);
 
-  g.terminal.write_num(vstart as int, 16, false);
-  g.terminal.write_string("\n\x00");
-  g.terminal.write_num(vend as int, 16, false);
+  kfmt!(terminal, "Kernel initial bounds %x to %x\n\x00", (vstart as int), (vend as int))
 
   memory::kalloc::init_first(vstart, vend);
-  g.terminal.write_string("\nKernel allocator setup (1/2)\x00");
+  terminal.print_string("Kernel allocator setup (1/2)\n\x00");
+  memory::vm::alloc();
+  terminal.print_string("Allocated kernel page table\n\x00");
 
   loop {};
 }

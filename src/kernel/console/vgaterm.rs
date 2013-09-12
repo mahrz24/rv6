@@ -1,5 +1,3 @@
-#[path="../kutil.rs"]
-mod kutil;
 
 pub enum VGAColor {
     Black       = 0,
@@ -20,7 +18,6 @@ pub enum VGAColor {
     White       = 15,
 }
 
-
 struct VGATextColor(u8);
 struct VGAEntry(u16);
 
@@ -33,6 +30,49 @@ pub struct VGATerminal {
   color: VGATextColor,
   buffer: *mut u16
 }
+
+pub enum Format {
+  Integer(int, bool),
+  String
+}
+
+
+pub trait Printable {
+  unsafe fn print(&self, &mut VGATerminal, Format);
+}
+
+impl Printable for int {
+  unsafe fn print(&self, term:&mut VGATerminal, fmt:Format) {
+    match fmt {
+      Integer(base, sign) => term.print_num(*self, base, sign),
+      _ => ::panic::panic("wrong print format\x00")
+    }
+  }
+}
+
+impl Printable for uint {
+  unsafe fn print(&self, term:&mut VGATerminal, fmt:Format) {
+    match fmt {
+      Integer(base, sign) => term.print_num(*self as int, base, sign),
+      _ => ::panic::panic("wrong print format\x00")
+    }
+  }
+}
+
+impl Printable for &'static str {
+  unsafe fn print(&self, term:&mut VGATerminal, fmt:Format) {
+    match fmt {
+      String => term.print_string(*self),
+      _ => ::panic::panic("wrong print format\x00")
+    }
+  }
+}
+
+pub static mut terminal: VGATerminal = VGATerminal { row: 0,
+                                                     column: 0,
+                                                     color: VGATextColor(0),
+                                                     buffer: 0x0 as *mut u16
+                                                   };
 
 pub fn make_color(fg: VGAColor, bg: VGAColor) -> VGATextColor {
   VGATextColor((fg as u8) | (bg as u8) << 4)
@@ -58,27 +98,55 @@ impl VGATerminal {
     *((self.buffer as uint + pos * 2) as *mut u16) = *entry;
   }
 
-  unsafe fn set_entry_at(self, x: uint, y: uint, entry: VGAEntry) {
-    self.set_entry(y + VGA_WIDTH*x, entry);
+  unsafe fn set_cursor(self, pos: uint) {
+    let CRTPORT:u16 = 0x3d4;
+    ::x86::outb(CRTPORT, 14);
+    ::x86::outb(CRTPORT+1, (pos>>8) as u8);
+    ::x86::outb(CRTPORT, 15);
+    ::x86::outb(CRTPORT+1, pos as u8);
   }
 
-  pub unsafe fn put_char(&mut self, c: u8)
-  {
-    self.set_entry_at(self.row, self.column, make_vgaentry(c, self.color));
-    self.column+=1;
-    if self.column >= VGA_WIDTH
-    {
+  unsafe fn update_cursor(self) {
+    self.set_cursor(self.column + VGA_WIDTH*self.row);
+  }
+
+  unsafe fn set_entry_at(self, row: uint, col: uint, entry: VGAEntry) {
+    self.set_entry(col + VGA_WIDTH*row, entry);
+  }
+
+  unsafe fn set_entry_cur(self, entry: VGAEntry) {
+    self.set_entry(self.column + VGA_WIDTH*self.row, entry);
+  }
+
+  pub unsafe fn put_char(&mut self, c: u8) {
+    if c == ('\n' as u8) {
       self.column = 0;
       self.row += 1;
-      if self.row >= VGA_HEIGHT-1
+    }
+    else {
+      self.set_entry_at(self.row, self.column, make_vgaentry(c, self.color));
+      self.column+=1;
+      if self.column >= VGA_WIDTH
       {
-        self.row = 0;
+        self.column = 0;
+        self.row += 1;
       }
     }
+
+    if self.row == VGA_HEIGHT
+    {
+      ::memory::memmove(self.buffer as *mut (), (self.buffer as uint + 160) as *(), 2*24*80);
+      let empty = *make_vgaentry(' ' as u8, self.color) as int;
+      ::kutil::range(VGA_WIDTH*24, VGA_WIDTH, |i| {
+        self.set_entry(i,make_vgaentry(' ' as u8, self.color));
+      });
+      self.row -= 1;
+    }
+
+    self.update_cursor();
   }
 
-  pub unsafe fn write_num(&mut self, num: int, base: int, s: bool)
-  {
+  pub unsafe fn print_num(&mut self, num: int, base: int, s: bool) {
     let mut sign = s;
     let digits = "0123456789abcdef";
     let mut buf:[u8, ..16] = [0 as u8, ..16];
@@ -90,6 +158,7 @@ impl VGATerminal {
       x = -num as uint;
     }
     else {
+      sign = false;
       x = num as uint;
     }
 
@@ -108,33 +177,58 @@ impl VGATerminal {
       i+=1;
     }
 
+    if(base==16)
+    {
+      self.put_char('0' as u8);
+      self.put_char('x' as u8);
+    }
+
+    i -= 1;
     while(i >= 0) {
-      i -= 1;
       self.put_char(buf[i]);
+      i -= 1;
     }
   }
 
-  pub unsafe fn write_string(&mut self, data: &str)
-  {
+  pub unsafe fn print_string(&mut self, string: &str) {
     let mut len = 0;
-    while data[len] != 0 {
-      if data[len] == '\n' as u8 {
-        self.column = 0;
-        self.row += 1;
-        if self.row >= VGA_HEIGHT-1
-        {
-          self.row = 0;
-        }
+    while string[len] != 0 {
+      self.put_char(string[len]);
+      len+=1;
+    }
+  }
+
+  pub unsafe fn print_format(&mut self, string: &str,
+    fmt: &fn(&mut VGATerminal, uint, Format)) {
+    let mut len = 0;
+    let mut arg = 0;
+    while string[len] != 0 {
+      let mut c:u8 = string[len];
+      if c != '%' as u8 {
+        self.put_char(string[len]);
       }
       else {
-       self.put_char(data[len]);
+        len+=1;
+        c = string[len];
+        if c != 0 {
+          match c as char {
+            'd' => fmt(self, arg, Integer(10, true)),
+            'x' | 'p' => fmt(self, arg, Integer(16, false)),
+            's' => fmt(self, arg, String),
+            _ => {
+              self.put_char('%' as u8);
+              self.put_char(c);
+            }
+          }
+          arg-=1;
+        }
       }
       len+=1;
     }
   }
 
   pub unsafe fn clear(self) {
-    kutil::range(0, VGA_WIDTH*VGA_HEIGHT, |i| {
+    ::kutil::range(0, VGA_WIDTH*VGA_HEIGHT, |i| {
       self.set_entry(i,make_vgaentry(' ' as u8, self.color));
     });
   }

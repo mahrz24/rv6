@@ -1,8 +1,5 @@
-use memory::*;
-use memory::spinlock::*;
-
-pub fn panic(name: &str) {}
-
+use super::*;
+use super::spinlock::*;
 
 struct RunList {
   next: *RunList
@@ -33,19 +30,33 @@ pub unsafe fn init_first(vstart: *(), vend: *()) {
 unsafe fn freerange(vstart: *(), vend: *()) {
   let mut p: *() = PGROUNDUP(vstart as uint);
   while ptr_add(p, PGSIZE) as uint <= vend as uint {
-    kfree(p);
+    free(p);
     ptr_inc(&mut p, PGSIZE);
   }
 }
 
+// Allocate a page of physical memory
+pub unsafe fn alloc() -> *()
+{
+  let mut r: *mut RunList = mnull_ptr();
+
+  do kmem.lock.protect {
+    r = ptr_i2m(kmem.freelist);
+    if !mis_null(r) {
+      kmem.freelist = (*r).next;
+    }
+  }
+  return ptr_m2i(r);
+}
+
 // Free a page of physical memory
-unsafe fn kfree(v: *())
+unsafe fn free(v: *())
 {
   if (v as uint) % PGSIZE > 0 || (v as uint) < (get_end() as uint) || V2P(v) >= PHYSTOP {
-    panic("kfree");
+    ::panic::panic("kfree");
   }
 
-  //memset(v, 1, PGSIZE);
+  memset(v, 1, PGSIZE);
 
   do kmem.lock.protect {
     let mut r: *mut RunList = v as *mut RunList;
@@ -53,3 +64,4 @@ unsafe fn kfree(v: *())
     kmem.freelist = r as *RunList;
   }
 }
+
