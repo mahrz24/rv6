@@ -134,5 +134,5 @@ def task_build():
 
 def task_start():
     return {'actions': ['%s src/rv6.img' % QEMU],
-            'file_dep': ['src/rv6.img']}
+            'task_dep': ['build']}
 
