@@ -1,4 +1,5 @@
 import glob
+import os
 
 DOIT_CONFIG = {'default_tasks': ['build']}
 
@@ -14,7 +15,7 @@ CFLAGS = ' '.join(['-fno-pic -static -fno-builtin ',
          '-fno-strict-aliasing -Wall -MD -ggdb ',
          '-m32 -Werror -fno-omit-frame-pointer ',
          '-fno-stack-protector -O -nostdinc '])
-RUSTFLAGS = '-O --target i386-intel-linux --lib -c'
+RUSTFLAGS = '-O --target i386-intel-linux --lib -c -Z debug-info'
 
 def task_provide_constants():
     return {'actions': ['src/mkconstants.py '
@@ -133,6 +134,26 @@ def task_build():
 
 
 def task_start():
-    return {'actions': ['%s src/rv6.img' % QEMU],
-            'task_dep': ['build']}
+    def qemu(smp,mem,debug):
+        extra = ''
+        if debug:
+            extra = '-serial mon:stdio -gdb tcp::9573'
+        os.system('%s -smp %s -m %s %s src/rv6.img' % (QEMU, smp, mem, extra))
+    return {'actions': [(qemu,)],
+            'task_dep': ['build'],
+            'params':[{'name':'smp',
+                       'short':'p',
+                       'long': 'smp',
+                       'default': '1'},
+                      {'name':'mem',
+                       'short':'m',
+                       'long': 'mem',
+                       'default': '512'},
+                      {'name':'debug',
+                       'short' : 'd',
+                       'long':'debug',
+                       'type': bool,
+                       'default':False}]}
 
+def task_kdbg():
+    return {'actions': ['kdbg -r localhost:9573 src/kernel/kernel']}

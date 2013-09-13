@@ -1,0 +1,2 @@
+#!/usr/bin/sh
+kdbg -r localhost:9573 src/kernel/kernel
