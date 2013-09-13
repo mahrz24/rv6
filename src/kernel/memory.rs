@@ -20,10 +20,14 @@ extern {
   #[fast_ffi]
   pub fn get_end() -> *();
   #[fast_ffi]
+  #[inline]
   pub fn get_data() -> *();
 }
 
-pub unsafe fn memset(dst: *(), c: u8, n: uint) -> *() {
+
+/// Sets n bytes of memory pointed to by dst to c
+pub unsafe fn memset<T>(dst: *mut T, c: u8, n: uint) -> *mut () {
+  let dst: *mut () = dst as *mut ();
   if (dst as int)%4 == 0 && n%4 == 0 {
     let cc:int = c as int;
     ::x86::stosl(dst, (cc << 24) | (cc << 16) | (cc << 8) | cc, n/4 as int);
@@ -34,7 +38,7 @@ pub unsafe fn memset(dst: *(), c: u8, n: uint) -> *() {
   dst
 }
 
-pub unsafe fn memmove(dst: *mut (), src: *const (), n: uint) -> *mut () {
+pub unsafe fn memmove<T,U>(dst: *mut T, src: *const U, n: uint) -> *mut T {
   let mut s: *u8 = src as *u8;
   let mut d: *mut u8 = dst as *mut u8;
   let mut n = n;
@@ -60,12 +64,22 @@ pub unsafe fn memmove(dst: *mut (), src: *const (), n: uint) -> *mut () {
   dst
 }
 
-pub fn V2P<T>(a: *T) -> uint {
+
+
+pub fn V2P<T>(a: *const T) -> uint {
   (a as uint - KERNBASE)
+}
+
+pub fn V2Pi(a: uint) -> uint {
+  (a - KERNBASE)
 }
 
 pub fn P2V<T>(a: uint) -> *T {
   (a + KERNBASE) as *T
+}
+
+pub fn mut_P2V<T>(a: uint) -> *mut T {
+  (a + KERNBASE) as *mut T
 }
 
 pub fn P2Vi(a: uint) -> uint {

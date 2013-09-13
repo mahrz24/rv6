@@ -172,3 +172,4 @@ impl<T> Sub<uint, *mut T> for *mut T {
         self.offset_back(*rhs)
     }
 }
+

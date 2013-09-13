@@ -5,7 +5,8 @@
 #include <memory_c.h>
 
 typedef unsigned int pde_t;
-pde_t entrypgdir[];  // For entry.asm
+pde_t entrypgdir[];
+pde_t *kpgdir;
 
 extern char end[];
 extern char data[];
@@ -17,6 +18,7 @@ void * get_end() {
 void * get_data() {
   return (void*)data;
 }
+
 
 
 // Boot page table used in entry.S and entryother.S.

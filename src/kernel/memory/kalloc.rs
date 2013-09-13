@@ -36,13 +36,13 @@ unsafe fn freerange(vstart: *(), vend: *()) {
 }
 
 // Allocate a page of physical memory
-pub unsafe fn alloc() -> *()
+pub unsafe fn alloc<T>() -> *mut T
 {
   let mut r: *mut RunList = mut_null();
 
   do kmem.lock.protect {
     r = transmute(kmem.freelist);
-    if r.is_null() {
+    if r.is_not_null() {
       kmem.freelist = (*r).next;
     }
   }
@@ -50,10 +50,12 @@ pub unsafe fn alloc() -> *()
 }
 
 // Free a page of physical memory
-unsafe fn free(v: *())
+unsafe fn free<T>(v: *T)
 {
+  let v = v as *mut ();
+
   if (v as uint) % PGSIZE > 0 || (v as uint) < (get_end() as uint) || V2P(v) >= PHYSTOP {
-    ::panic::panic("kfree\x00");
+    ::panic::panic("kfree");
   }
 
   memset(v, 1, PGSIZE);
