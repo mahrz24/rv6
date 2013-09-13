@@ -126,6 +126,18 @@ impl<T> Ord for *const T {
 }
 
 // Pointer arithmetic
+// This is what the rust developers possibly wanted to avoid ;)
+// However for kernel programming this is very helpful
+// The index operator differs from plain C however as it returns
+// a pointer and not a value
+
+impl<T> Index<uint, *T> for *T {
+    #[inline]
+    fn index(&self, rhs: &uint) -> *T {
+      self.offset(*rhs)
+    }
+}
+
 impl<T> Add<uint, *T> for *T {
     #[inline]
     fn add(&self, rhs: &uint) -> *T {
@@ -140,6 +152,12 @@ impl<T> Sub<uint, *T> for *T {
     }
 }
 
+impl<T> Index<uint, *mut T> for *mut T {
+    #[inline]
+    fn index(&self, rhs: &uint) -> *mut T {
+      self.offset(*rhs)
+    }
+}
 
 impl<T> Add<uint, *mut T> for *mut T {
     #[inline]

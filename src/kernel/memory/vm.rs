@@ -27,7 +27,7 @@ impl KMap {
         return -1;
       }
       if (*pte & PTE_P) != 0 {
-        ::panic::panic("Remap\x00");
+        ::panic::panic("Remap");
       }
       *(pte as *mut uint) = pfirst | self.perm | PTE_P;
       if first == last {
@@ -53,12 +53,12 @@ pub unsafe fn setupkvm() -> *() {
   }
   memset(pgdir, 0, PGSIZE);
   if P2Vi(PHYSTOP) > DEVSPACE {
-    ::panic::panic("PHYSTOP too high\x00");
+    ::panic::panic("PHYSTOP too high");
   }
 
   ::kutil::range(0,4, |i| {
     if kmap[i].map(pgdir) < 0 {
-      ::panic::panic("Could not map page\x00");
+      ::panic::panic("Could not map page");
     }
   });
 

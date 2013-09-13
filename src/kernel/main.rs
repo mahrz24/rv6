@@ -22,20 +22,18 @@ pub unsafe fn main() {
   terminal.color = make_color(Yellow, Blue);
   terminal.clear();
 
-  terminal.print_string("================================================================================\x00");
-  terminal.print_string("rv6 v.0.1 kernel is starting\n\x00");
+  terminal.print_string("================================================================================");
+  terminal.print_string("rv6 v.0.1 kernel is starting\n");
 
   let vstart: *() = memory::get_end();
   let vend: *() = memory::P2V(4*1024*1024);
 
-  terminal.print_num(zero::size_of::<()>() as int,10,false);
-
-  kfmt!(terminal, "Kernel initial bounds [%x] to [%x]\n\x00", (vstart as int), (vend as int))
+  kfmt!(terminal, "Kernel initial bounds [%x] to [%x]\n", (vstart as int), (vend as int))
 
   memory::kalloc::init_first(vstart, vend);
-  terminal.print_string("Kernel allocator setup (1/2)\n\x00");
+  terminal.print_string("Kernel allocator setup (1/2)\n");
   memory::vm::alloc();
-  terminal.print_string("Allocated kernel page table\n\x00");
+  terminal.print_string("Allocated kernel page table\n");
 
   loop {};
 }

@@ -1,3 +1,4 @@
+use zero::*;
 
 pub enum VGAColor {
     Black       = 0,
@@ -45,7 +46,7 @@ impl Printable for int {
   unsafe fn print(&self, term:&mut VGATerminal, fmt:Format) {
     match fmt {
       Integer(base, sign) => term.print_num(*self, base, sign),
-      _ => ::panic::panic("wrong print format\x00")
+      _ => ::panic::panic("wrong print format")
     }
   }
 }
@@ -54,7 +55,7 @@ impl Printable for uint {
   unsafe fn print(&self, term:&mut VGATerminal, fmt:Format) {
     match fmt {
       Integer(base, sign) => term.print_num(*self as int, base, sign),
-      _ => ::panic::panic("wrong print format\x00")
+      _ => ::panic::panic("wrong print format")
     }
   }
 }
@@ -63,7 +64,7 @@ impl Printable for &'static str {
   unsafe fn print(&self, term:&mut VGATerminal, fmt:Format) {
     match fmt {
       String => term.print_string(*self),
-      _ => ::panic::panic("wrong print format\x00")
+      _ => ::panic::panic("wrong print format")
     }
   }
 }
@@ -136,7 +137,6 @@ impl VGATerminal {
     if self.row == VGA_HEIGHT
     {
       ::memory::memmove(self.buffer as *mut (), (self.buffer as uint + 160) as *(), 2*24*80);
-      let empty = *make_vgaentry(' ' as u8, self.color) as int;
       ::kutil::range(VGA_WIDTH*24, VGA_WIDTH, |i| {
         self.set_entry(i,make_vgaentry(' ' as u8, self.color));
       });
@@ -191,26 +191,28 @@ impl VGATerminal {
   }
 
   pub unsafe fn print_string(&mut self, string: &str) {
+    let (str_ptr, str_len): (*u8, uint) = transmute(string);
     let mut len = 0;
-    while string[len] != 0 {
-      self.put_char(string[len]);
+    while len < str_len {
+      self.put_char(*str_ptr[len]);
       len+=1;
     }
   }
 
   pub unsafe fn print_format(&mut self, string: &str,
     fmt: &fn(&mut VGATerminal, uint, Format)) {
+    let (str_ptr, str_len): (*u8, uint) = transmute(string);
     let mut len = 0;
     let mut arg = 0;
-    while string[len] != 0 {
-      let mut c:u8 = string[len];
+    while len < str_len {
+      let mut c:u8 = *str_ptr[len];
       if c != '%' as u8 {
-        self.put_char(string[len]);
+        self.put_char(c);
       }
       else {
         len+=1;
-        c = string[len];
-        if c != 0 {
+        c = *str_ptr[len];
+        if len < str_len {
           match c as char {
             'd' => fmt(self, arg, Integer(10, true)),
             'x' | 'p' => fmt(self, arg, Integer(16, false)),
