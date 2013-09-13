@@ -7,23 +7,34 @@ pub use zero::transmute;
 /// Calculate the offset from a pointer.
 #[inline]
 pub unsafe fn offset<T>(ptr: *T, count: uint) -> *T {
-    (ptr as uint + (count as uint) * size_of::<T>()) as *T
+    (ptr as uint + (count as uint) * ptr_size::<T>()) as *T
 }
 
 #[inline]
 pub unsafe fn mut_offset<T>(ptr: *mut T, count: uint) -> *mut T {
-    (ptr as uint + (count as uint) * size_of::<T>()) as *mut T
+    (ptr as uint + (count as uint) * ptr_size::<T>()) as *mut T
 }
 
 /// Calculate the negative offset from a pointer.
 #[inline]
 pub unsafe fn offset_back<T>(ptr: *T, count: uint) -> *T {
-    (ptr as uint - (count as uint) * size_of::<T>()) as *T
+    (ptr as uint - (count as uint) * ptr_size::<T>()) as *T
 }
 
 #[inline]
 pub unsafe fn mut_offset_back<T>(ptr: *mut T, count: uint) -> *mut T {
-    (ptr as uint - (count as uint) * size_of::<T>()) as *mut T
+    (ptr as uint - (count as uint) * ptr_size::<T>()) as *mut T
+}
+
+#[inline(always)]
+pub unsafe fn ptr_size<T>() -> uint {
+  let s = size_of::<T>();
+  if s == 0 {
+    1
+  }
+  else {
+    s
+  }
 }
 
 pub static static_null: *() = 0x0 as *();
@@ -41,28 +52,28 @@ pub fn is_null<T>(ptr: *const T) -> bool { ptr == null() }
 pub fn is_not_null<T>(ptr: *const T) -> bool { !is_null(ptr) }
 
 pub trait RawPtr<T> {
-    fn is_null(&self) -> bool;
-    fn is_not_null(&self) -> bool;
-    fn offset(&self, count: uint) -> Self;
-    fn offset_back(&self, count: uint) -> Self;
+  fn is_null(&self) -> bool;
+  fn is_not_null(&self) -> bool;
+  fn offset(&self, count: uint) -> Self;
+  fn offset_back(&self, count: uint) -> Self;
 }
 
 impl<T> RawPtr<T> for *T {
-    /// Returns true if the pointer is equal to the null pointer.
-    #[inline]
-    fn is_null(&self) -> bool { is_null(*self) }
+  /// Returns true if the pointer is equal to the null pointer.
+  #[inline]
+  fn is_null(&self) -> bool { is_null(*self) }
 
-    /// Returns true if the pointer is not equal to the null pointer.
-    #[inline]
-    fn is_not_null(&self) -> bool { is_not_null(*self) }
+  /// Returns true if the pointer is not equal to the null pointer.
+  #[inline]
+  fn is_not_null(&self) -> bool { is_not_null(*self) }
 
-    /// Calculates the offset from a pointer.
-    #[inline]
-    fn offset(&self, count: uint) -> *T { unsafe{ offset(*self, count) } }
+  /// Calculates the offset from a pointer.
+  #[inline]
+  fn offset(&self, count: uint) -> *T { unsafe{ offset(*self, count) } }
 
-    /// Calculates the negative offset from a pointer.
-    #[inline]
-    fn offset_back(&self, count: uint) -> *T { unsafe{ offset_back(*self, count) } }
+  /// Calculates the negative offset from a pointer.
+  #[inline]
+  fn offset_back(&self, count: uint) -> *T { unsafe{ offset_back(*self, count) } }
 }
 
 /// Extension methods for mutable pointers

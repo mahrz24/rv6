@@ -28,6 +28,8 @@ pub unsafe fn main() {
   let vstart: *() = memory::get_end();
   let vend: *() = memory::P2V(4*1024*1024);
 
+  terminal.print_num(zero::size_of::<()>() as int,10,false);
+
   kfmt!(terminal, "Kernel initial bounds [%x] to [%x]\n\x00", (vstart as int), (vend as int))
 
   memory::kalloc::init_first(vstart, vend);
