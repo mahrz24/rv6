@@ -20,7 +20,7 @@ impl KMap {
     let mut pfirst = self.phys_start;
     let mut first: *() = PGROUNDDOWN(self.phys_start);
     let last: *() = PGROUNDDOWN(self.phys_end-1);
-    let mut pte: *uint = null_ptr();
+    let mut pte: *uint = null();
     loop {
       pte = walkpgdir(pgdir, first, true);
       if is_null(pte) {
@@ -30,26 +30,26 @@ impl KMap {
         ::panic::panic("Remap");
       }
       *(pte as *mut uint) = pfirst | self.perm | PTE_P;
-      if ptr_eq(first, last) {
+      if first == last {
         break;
       }
-      first = ptr_add(first, PGSIZE);
+      first = first + PGSIZE;
       pfirst += PGSIZE;
     }
     return 0;
   }
 }
 
-pub static mut kpgdir: *() = cnull_ptr;
+pub static mut kpgdir: *() = static_null;
 
 pub unsafe fn walkpgdir(pgdir: *(), vaddr: *(), alloc: bool) -> *uint {
-  return null_ptr();
+  return null();
 }
 
 pub unsafe fn setupkvm() -> *() {
   let pgdir: *() = ::memory::kalloc::alloc();
   if is_null(pgdir) {
-    return null_ptr();
+    return null();
   }
   memset(pgdir, 0, PGSIZE);
   if P2Vi(PHYSTOP) > DEVSPACE {

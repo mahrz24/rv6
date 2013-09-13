@@ -1,4 +1,6 @@
-// Source from xv6's main.c to setup entry pgdir
+// Source from xv6 which doesn't work in rust (some linking problem)
+// I guess everything in here could also be transfered to rust at some
+// point
 
 #include <memory_c.h>
 

@@ -29,31 +29,31 @@ pub unsafe fn init_first(vstart: *(), vend: *()) {
 
 unsafe fn freerange(vstart: *(), vend: *()) {
   let mut p: *() = PGROUNDUP(vstart as uint);
-  while ptr_add(p, PGSIZE) as uint <= vend as uint {
+  while p + PGSIZE <= vend {
     free(p);
-    ptr_inc(&mut p, PGSIZE);
+    p = p + PGSIZE;
   }
 }
 
 // Allocate a page of physical memory
 pub unsafe fn alloc() -> *()
 {
-  let mut r: *mut RunList = mnull_ptr();
+  let mut r: *mut RunList = mut_null();
 
   do kmem.lock.protect {
-    r = ptr_i2m(kmem.freelist);
-    if !mis_null(r) {
+    r = transmute(kmem.freelist);
+    if r.is_null() {
       kmem.freelist = (*r).next;
     }
   }
-  return ptr_m2i(r);
+  return transmute(r);
 }
 
 // Free a page of physical memory
 unsafe fn free(v: *())
 {
   if (v as uint) % PGSIZE > 0 || (v as uint) < (get_end() as uint) || V2P(v) >= PHYSTOP {
-    ::panic::panic("kfree");
+    ::panic::panic("kfree\x00");
   }
 
   memset(v, 1, PGSIZE);

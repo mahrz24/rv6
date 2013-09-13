@@ -156,4 +156,4 @@ def task_start():
                        'default':False}]}
 
 def task_kdbg():
-    return {'actions': ['kdbg -r localhost:9573 src/kernel/kernel']}
+    return {'actions': ['']}

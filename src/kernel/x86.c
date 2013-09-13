@@ -1,3 +1,6 @@
+// x86 inline functions from xv6 that rustc won't compile yet
+// this is annoying because inline isn't possible this way
+
 typedef unsigned int   uint;
 typedef unsigned short ushort;
 typedef unsigned char  uchar;

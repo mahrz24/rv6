@@ -6,6 +6,7 @@
 
 use console::vgaterm::*;
 
+
 mod zero;
 pub mod panic;
 pub mod console;
@@ -27,7 +28,7 @@ pub unsafe fn main() {
   let vstart: *() = memory::get_end();
   let vend: *() = memory::P2V(4*1024*1024);
 
-  kfmt!(terminal, "Kernel initial bounds %x to %x\n\x00", (vstart as int), (vend as int))
+  kfmt!(terminal, "Kernel initial bounds [%x] to [%x]\n\x00", (vstart as int), (vend as int))
 
   memory::kalloc::init_first(vstart, vend);
   terminal.print_string("Kernel allocator setup (1/2)\n\x00");
