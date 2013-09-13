@@ -220,7 +220,7 @@ impl VGATerminal {
               self.put_char(c);
             }
           }
-          arg-=1;
+          arg+=1;
         }
       }
       len+=1;
