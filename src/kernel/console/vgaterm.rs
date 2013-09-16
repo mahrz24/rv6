@@ -22,8 +22,8 @@ pub enum VGAColor {
 struct VGATextColor(u8);
 struct VGAEntry(u16);
 
-static VGA_WIDTH: uint = 80;
-static VGA_HEIGHT: uint = 25;
+pub static VGA_WIDTH: uint = 80;
+pub static VGA_HEIGHT: uint = 25;
 
 pub struct VGATerminal {
   row: uint,
@@ -52,6 +52,33 @@ impl Printable for int {
 }
 
 impl Printable for uint {
+  unsafe fn print(&self, term:&mut VGATerminal, fmt:Format) {
+    match fmt {
+      Integer(base, sign) => term.print_num(*self as int, base, sign),
+      _ => ::panic::panic("wrong print format")
+    }
+  }
+}
+
+impl Printable for u8 {
+  unsafe fn print(&self, term:&mut VGATerminal, fmt:Format) {
+    match fmt {
+      Integer(base, sign) => term.print_num(*self as int, base, sign),
+      _ => ::panic::panic("wrong print format")
+    }
+  }
+}
+
+impl<T> Printable for *T {
+  unsafe fn print(&self, term:&mut VGATerminal, fmt:Format) {
+    match fmt {
+      Integer(base, sign) => term.print_num(*self as int, base, sign),
+      _ => ::panic::panic("wrong print format")
+    }
+  }
+}
+
+impl<T> Printable for *mut T {
   unsafe fn print(&self, term:&mut VGATerminal, fmt:Format) {
     match fmt {
       Integer(base, sign) => term.print_num(*self as int, base, sign),
@@ -96,7 +123,7 @@ impl VGATerminal {
   }
 
   unsafe fn set_entry(self, pos: uint, entry: VGAEntry) {
-    *((self.buffer as uint + pos * 2) as *mut u16) = *entry;
+    *((self.buffer[pos]) as *mut u16) = *entry;
   }
 
   unsafe fn set_cursor(self, pos: uint) {
@@ -134,10 +161,11 @@ impl VGATerminal {
       }
     }
 
+
     if self.row == VGA_HEIGHT
     {
-      ::memory::memmove(self.buffer as *mut (), (self.buffer as uint + 160) as *(), 2*24*80);
-      ::kutil::range(VGA_WIDTH*24, VGA_WIDTH, |i| {
+      ::memory::memmove(self.buffer, self.buffer + 80, 2*24*80);
+      ::kutil::range(VGA_WIDTH*24, VGA_WIDTH*25, |i| {
         self.set_entry(i,make_vgaentry(' ' as u8, self.color));
       });
       self.row -= 1;

@@ -6,14 +6,8 @@
 %define MAGIC     0x1BADB002             ; 'magic number' lets bootloader find the header
 %define CHECKSUM -(MAGIC + FLAGS)        ; checksum of above, to prove we are multiboot
 
-%define KERNBASE 0x80000000
-
-%define KSTACKSIZE 4096  ; size of per-process kernel stack
-
-%define CR4_PSE         0x00000010       ; Page size extension
-
-%define CR0_WP          0x00010000       ; Write Protect
-%define CR0_PG          0x80000000       ; Paging
+%include "memory_c.asm"
+%include "params_c.asm"
 
 extern entrypgdir
 extern main

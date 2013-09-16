@@ -5,21 +5,24 @@
 #[no_core];
 
 use console::vgaterm::*;
-
+use params_c::*;
 
 mod zero;
+pub mod params_c;
 pub mod panic;
 pub mod console;
 pub mod macros;
 pub mod memory;
+pub mod proc;
 pub mod x86;
 pub mod kutil;
+
 
 #[no_mangle]
 pub unsafe fn main() {
   terminal = VGATerminal::new();
 
-  terminal.color = make_color(Yellow, Blue);
+  terminal.color = make_color(Yellow, Brown);
   terminal.clear();
 
   terminal.print_string("================================================================================");
@@ -34,6 +37,10 @@ pub unsafe fn main() {
   terminal.print_string("Kernel allocator setup (1/2)\n");
   memory::vm::alloc();
   terminal.print_string("Allocated kernel page table\n");
+
+  proc::mp::init();
+
+  terminal.print_string("Multiprocessor setup\n");
 
   loop {};
 }

@@ -17,23 +17,54 @@ CFLAGS = ' '.join(['-fno-pic -static -fno-builtin ',
          '-fno-stack-protector -O -nostdinc '])
 RUSTFLAGS = '-O --target i386-intel-linux --lib -c -Z debug-info'
 
-def task_provide_constants():
+def task_provide_memory_constants():
     return {'actions': ['src/mkconstants.py '
                         'src/constants/memory.consts '
                         'src/boot/memory_c.asm '
+                        'src/kernel/memory_c.asm '
                         'src/kernel/memory/memory_c.rs '
                         'src/kernel/memory_c.h'],
             'targets': ['src/boot/memory_c.asm',
+                        'src/kernel/memory_c.asm',
                         'src/kernel/memory/memory_c.rs',
                         'src/kernel/memory_c.h'],
             'file_dep': ['src/constants/memory.consts'],
+            'clean': True}
+
+
+def task_provide_params_constants():
+    return {'actions': ['src/mkconstants.py '
+                        'src/constants/params.consts '
+                        'src/kernel/params_c.asm '
+                        'src/kernel/params_c.rs '],
+            'targets': ['src/kernel/params_c.asm',
+                        'src/kernel/params_c.rs'],
+            'file_dep': ['src/constants/params.consts'],
+            'clean': True}
+
+
+def task_provide_proc_constants():
+    return {'actions': ['src/mkconstants.py '
+                        'src/constants/proc.consts '
+                        'src/kernel/proc/proc_c.rs'],
+            'targets': ['src/kernel/proc/proc_c.rs'],
+            'file_dep': ['src/constants/proc.consts'],
+            'clean': True}
+
+def task_provide_constants():
+    return {'actions' : [],
+            'task_dep': ['provide_memory_constants',
+                         'provide_params_constants',
+                         'provide_proc_constants'],
             'clean': True}
 
 def task_compile_entry():
     return {'actions': ['%s %s -Isrc/kernel/ ' % (NASM, NASMFLAGS) +
                         ' -o src/kernel/entry.o '
                         ' src/kernel/entry.asm'],
-        'file_dep': ['src/kernel/entry.asm'],
+        'file_dep': ['src/kernel/entry.asm',
+                     'src/kernel/memory_c.asm',
+                     'src/kernel/params_c.asm'],
         'targets': ['src/kernel/entry.o'],
         'clean': True}
 
@@ -42,7 +73,9 @@ def task_compile_main():
     return {'actions': ['%s %s ' % (RUSTC, RUSTFLAGS) +
                         ' -o src/kernel/main.o '
                         ' src/kernel/main.rs'],
-        'file_dep': deps + ['src/kernel/memory/memory_c.rs'],
+        'file_dep': deps + ['src/kernel/memory/memory_c.rs',
+                            'src/kernel/proc/proc_c.rs',
+                            'src/kernel/params_c.rs'],
         'targets': ['src/kernel/main.o'],
         'clean': True}
 
@@ -137,14 +170,14 @@ def task_start():
     def qemu(smp,mem,debug):
         extra = ''
         if debug:
-            extra = '-serial mon:stdio -gdb tcp::9573'
+            extra = '-monitor stdio -gdb tcp::9573'
         os.system('%s -smp %s -m %s %s src/rv6.img' % (QEMU, smp, mem, extra))
     return {'actions': [(qemu,)],
             'task_dep': ['build'],
             'params':[{'name':'smp',
                        'short':'p',
                        'long': 'smp',
-                       'default': '1'},
+                       'default': '2'},
                       {'name':'mem',
                        'short':'m',
                        'long': 'mem',

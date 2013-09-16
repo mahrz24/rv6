@@ -1,5 +1,6 @@
 pub use memory::memory_c::*;
 pub use memory::ptr::*;
+use zero::Ord;
 
 #[path="memory/memory_c.rs"]
 mod memory_c;
@@ -25,6 +26,34 @@ extern {
 }
 
 
+
+pub unsafe fn memcmp_str<T>(v1: *const T, v2: &str, n: uint) -> u8
+{
+  let (str_ptr, str_len): (*u8, uint) = transmute(v2);
+  let mut n: uint = n;
+  if str_len < n {
+    n = str_len;
+  }
+  memcmp(v1, str_ptr, n)
+}
+
+pub unsafe fn memcmp<T,U>(v1: *const T, v2: *const U, n: uint) -> u8
+{
+  let mut s1: *u8 = v1 as *u8;
+  let mut s2: *u8 = v2 as *u8;
+  let mut n = n;
+  while(n > 0){
+    n-=1;
+    if *s1 != *s2 {
+      return *s1 - *s2;
+    }
+    s1 = s1 + 1;
+    s2 = s2 + 1;
+  }
+
+  return 0;
+}
+
 /// Sets n bytes of memory pointed to by dst to c
 pub unsafe fn memset<T>(dst: *mut T, c: u8, n: uint) -> *mut () {
   let dst: *mut () = dst as *mut ();
@@ -43,23 +72,23 @@ pub unsafe fn memmove<T,U>(dst: *mut T, src: *const U, n: uint) -> *mut T {
   let mut d: *mut u8 = dst as *mut u8;
   let mut n = n;
 
-  if (s as uint) < (d as uint) && (s as uint) + n > (d as uint) {
-    s = s + n;
-    d = d + n;
-    while n > 0 {
-      s = s - 1;
-      d = d - 1;
-      *d = *s;
-      n -= 1;
-    }
-  } else {
-    while n > 0 {
-      *d = *s;
-      s = s + 1;
-      d = d + 1;
-      n -= 1;
-    }
-  }
+   if s < d && s + n > d {
+     s = s + n;
+     d = d + n;
+     while n > 0 {
+       s = s - 1;
+       d = d - 1;
+       *d = *s;
+       n -= 1;
+     }
+   } else {
+     while n > 0 {
+  //     *d = *s;
+       s = s + 1;
+       d = d + 1;
+       n -= 1;
+     }
+   }
 
   dst
 }

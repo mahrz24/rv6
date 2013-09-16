@@ -61,7 +61,7 @@ unsafe fn free<T>(v: *T)
   memset(v, 1, PGSIZE);
 
   do kmem.lock.protect {
-    let mut r: *mut RunList = v as *mut RunList;
+    let r: *mut RunList = v as *mut RunList;
     (*r).next = kmem.freelist;
     kmem.freelist = r as *RunList;
   }

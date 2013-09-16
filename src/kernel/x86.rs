@@ -9,8 +9,10 @@ extern {
     #[fast_ffi]
     pub fn outb(port:u16, data: u8) -> ();
     #[fast_ffi]
+    #[inline(always)]
     pub fn lcr3(val:uint) -> ();
 }
+
 
 pub unsafe fn cli() {
   asm!( "cli"
