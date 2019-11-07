@@ -13,7 +13,7 @@ with open(in_filename, "rb") as fi:
         chunksize = len(chunk)
 
         if chunksize > 510:
-            print('Error: Bootblock to large (must be <= 510 bytes).')
+            print('Error: Bootblock too large (must be <= 510 bytes).')
             sys.exit(1)
 
         if chunksize < 510:
